@@ -22,8 +22,8 @@ class Tetris:
 
     score_ = 0
 
-    MINO_MERKAR_        = '◻️i'
-    FALLEN_MINO_MARKER_ = '◻️i'
+    MINO_MERKAR_        = '◻️ '
+    FALLEN_MINO_MARKER_ = '◻️ '
     WALL_MARKER_        = '🔳'
     BLANK_MARKER_       = '　'
 
