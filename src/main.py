@@ -1,6 +1,8 @@
 from enum import Enum, unique
-import random
 from keyboard_operation import *
+import copy
+import random
+import time
 
 class KindOfMarker(Enum):
     BLANK_      = 0
@@ -73,6 +75,7 @@ class Tetris:
             return '🔳'
 
     def print_field(self, field):
+        print("\033[21A", end = '')
         for i in field:
             print('🔳', end = '')
             for j in i:
@@ -105,6 +108,8 @@ class Tetris:
         width  = len(mino[0])
         for i in range(height):
             for j in range(width):
+                if mino[i][j] != KindOfMarker.MINO_:
+                    continue
                 field[left_top_y + i][left_top_x + j] = mino[i][j]
 
     def print_test(self, mino):
@@ -113,10 +118,84 @@ class Tetris:
                 print(j, end = '')
             print('')
         print('')
+        print("\033[4A", end = '')
+
+    def erase_mino(self, field, mino, left_top_x, left_top_y):
+        height = len(mino)
+        width  = len(mino[0])
+        for i in range(height):
+            for j in range(width):
+                if mino[i][j] == KindOfMarker.MINO_:
+                    field[i + left_top_y][j + left_top_x] = KindOfMarker.BLANK_
+
+    def is_intersect(self, field, mino, left_top_x, left_top_y):
+        height = len(mino)
+        width  = len(mino)
+
+        for i in range(height):
+            for j in range(width):
+                if mino[i][j] != KindOfMarker.MINO_:
+                    continue
+                if j + left_top_x < 0 or self.FIELD_WIDTH_ <= j + left_top_x:
+                    return True
+                if field[i + left_top_y][j + left_top_x] != KindOfMarker.BLANK_:
+                    return True
+
+        return False
+
+
+    def rotation(self, mino):
+        height = len(mino)
+        width  = len(mino[0])
+
+        ret_mino = copy.deepcopy(mino)
+
+        for i in range(height):
+            for j in range(width):
+                ret_mino[i][j] = mino[j][height - i - 1]
+
+        return ret_mino
+
+    def keyboard_processing(self, field, mino, left_top_x, left_top_y):
+        key = getch()
+
+        if key == 'w':
+            ret_mino = self.rotation(mino)
+            if self.is_intersect(field, mino, left_top_x, left_top_y):
+                return (left_top_x, left_top_y)
+            mino = ret_mino
+            return (left_top_x, left_top_y)
+
+        offset_x = 0
+        offset_y = 0
+
+        offset_x -= int(key == 'a')
+        offset_x += int(key == 'd')
+        offset_y += int(key == 's')
+
+        if self.is_intersect(
+                field, mino, left_top_x + offset_x, left_top_y + offset_y):
+            offset_x += int(key == 'a')
+            offset_x -= int(key == 'd')
+            offset_y -= int(key == 's')
+
+        return (left_top_x + offset_x, left_top_y + offset_y)
+
+ #   def arive_bottom_processing(self, field, mino, left_top_x, left_top_y):
+ #       height = len(mino)
+ #       width  = len(mino[0])
+ #       for i in range(height):
+ #           for j in ranage(width):
+ #               if mino[i][j] != KindOfMarker.MINO_:
+ #                   continue
+ #               fielda
 
     def tetris_processing(self):
         field = self.init_field_array()
-        self.print_field(field)
+        for i in range(self.FIELD_HEIGHT_ + 1):
+            print('')
+
+        last_clock = time.time()
 
         while 1:
             mino = self.generate_new_mino()
@@ -127,10 +206,27 @@ class Tetris:
             left_top_y = 0
             self.set_mino(field, mino, left_top_x, left_top_y)
             self.print_field(field)
-            getch()
-    # print
-    # fall
-    # print
+
+            while 1:
+                if kbhit():
+                    self.erase_mino(field, mino, left_top_x, left_top_y)
+                    (left_top_x, left_top_y) = self.keyboard_processing(
+                                                field, mino, left_top_x, left_top_y)
+
+                    self.set_mino(field, mino, left_top_x, left_top_y)
+                    self.print_field(field)
+                now_clock = time.time()
+                if now_clock - last_clock > 0.5:
+                    self.erase_mino(field, mino, left_top_x, left_top_y)
+                    last_clock = now_clock
+                    #if self.is_intersect(field, mino, left_top_x, left_top_y + 1):
+                    #    arive_bottom_processing()
+                    #    break
+
+                    left_top_y += 1
+
+                    self.set_mino(field, mino, left_top_x, left_top_y)
+                    self.print_field(field)
     # key_processing
     # delete_processing
     # 
