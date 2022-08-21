@@ -1,7 +1,7 @@
 # tetris_in_python
 
 ## 動作確認環境
-macOS 12
+macOS 12  
 Python3 3.9
 
 ## 利用
